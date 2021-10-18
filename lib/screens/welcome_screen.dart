@@ -56,16 +56,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     height: 60.0,
                   ),
                 ),
-                AnimatedTextKit(
-                  isRepeatingAnimation: true,
-                  animatedTexts: [
-                    TypewriterAnimatedText('Rimo Chat',
-                        textStyle: TextStyle(
-                          fontSize: 45.0,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        speed: Duration(milliseconds: 400))
-                  ],
+                Flexible(
+                  child: AnimatedTextKit(
+                    isRepeatingAnimation: true,
+                    animatedTexts: [
+                      TypewriterAnimatedText('Rimo Chat',
+                          textStyle: TextStyle(
+                            fontSize: 45.0,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          speed: Duration(milliseconds: 400))
+                    ],
+                  ),
                 ),
               ],
             ),

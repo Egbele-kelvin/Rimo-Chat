@@ -21,22 +21,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getCurrentUser() async {
     try {
-      final user = await _auth.currentUser;
+      final user = _auth.currentUser;
       if (user != null) {
         loggedUser = user;
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  void messageStream() async {
-    try {
-      await for (var snapShots
-          in _fireStore.collection('messages').snapshots()) {
-        for (var message in snapShots.docs) {
-          print(message.data()['text'].toString());
-        }
       }
     } catch (e) {
       print(e);
@@ -60,9 +47,8 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
               icon: Icon(Icons.close),
               onPressed: () {
-                // _auth.signOut();
-                // Navigator.pop(context);
-                // messageStream();
+                _auth.signOut();
+                Navigator.pop(context);
               }),
         ],
         title: Text('⚡️Chat'),
@@ -73,7 +59,10 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            MessageStream(),
+            MessageStream() ??
+                Center(
+                  child: Text('No Messages'),
+                ),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -116,7 +105,7 @@ class MessageStream extends StatelessWidget {
       stream: _fireStore.collection('messages').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          final messages = snapshot.data.docs;
+          final messages = snapshot.data.docs.reversed;
           List<Widget> messageWidgets = [];
           for (var message in messages) {
             final collection = message.data() as Map<String, Object>;
@@ -124,20 +113,18 @@ class MessageStream extends StatelessWidget {
             final messageSender = collection['sender'];
 
             /** the moment i added this line of code my app crashes **/
-            // final currentUser =
-            //     loggedUser.email != null ? loggedUser.email : Text('hello');
-            //
-            // if (currentUser == messageSender) {}
+            final currentUser = loggedUser.email;
 
             final messageBubble = CustomMessage(
               text: messageText,
               sender: messageSender,
-              //isMe: currentUser == messageSender,
+              isMe: currentUser == messageSender,
             );
             messageWidgets.add(messageBubble);
           }
           return Expanded(
             child: ListView(
+              reverse: true,
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
               children: messageWidgets,
             ),
@@ -162,26 +149,36 @@ class CustomMessage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Text(
             sender,
             style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
           Material(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
+            borderRadius: isMe
+                ? BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  )
+                : BorderRadius.only(
+                    // topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
             elevation: 5.0,
-            color: Colors.lightBlueAccent,
+            color: isMe ? Colors.lightBlueAccent : Colors.white,
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: Text(
                 text,
-                style: TextStyle(fontSize: 15.0, color: Colors.white),
+                style: isMe
+                    ? TextStyle(fontSize: 15.0, color: Colors.white)
+                    : TextStyle(fontSize: 15.0, color: Colors.black),
               ),
             ),
           ),
